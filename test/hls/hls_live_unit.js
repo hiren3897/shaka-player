@@ -329,6 +329,8 @@ describe('HlsParser live', () => {
             .setResponseValue('test:/main.mp4', segmentData);
 
         const manifest = await parser.start('test:/master', playerInterface);
+        const video = manifest.variants[0].video;
+        await video.createSegmentIndex();
 
         expect(manifest.presentationTimeline.isLive()).toBe(true);
         fakeNetEngine
@@ -947,7 +949,9 @@ describe('HlsParser live', () => {
             .setResponseValue('test:/main3.mp4', segmentData);
 
         playerInterface.isLowLatencyMode = () => true;
-        await parser.start('test:/master', playerInterface);
+        const manifest = await parser.start('test:/master', playerInterface);
+        const video = manifest.variants[0].video;
+        await video.createSegmentIndex();
         // Replace the entries with the updated values.
 
         fakeNetEngine.request.calls.reset();

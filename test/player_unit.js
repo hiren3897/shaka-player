@@ -24,7 +24,6 @@ goog.require('shaka.test.ManifestGenerator');
 goog.require('shaka.test.Util');
 goog.require('shaka.util.ConfigUtils');
 goog.require('shaka.util.Error');
-goog.require('shaka.util.Iterables');
 goog.require('shaka.util.ManifestParserUtils');
 goog.requireType('shaka.media.Playhead');
 
@@ -140,6 +139,8 @@ describe('Player', () => {
             jasmine.createSpy('destroy').and.returnValue(Promise.resolve()),
         setUseEmbeddedText: jasmine.createSpy('setUseEmbeddedText'),
         getUseEmbeddedText: jasmine.createSpy('getUseEmbeddedText'),
+        setSegmentRelativeVttTiming:
+            jasmine.createSpy('setSegmentRelativeVttTiming'),
         getTextDisplayer: () => textDisplayer,
         ended: jasmine.createSpy('ended').and.returnValue(false),
       };
@@ -325,7 +326,7 @@ describe('Player', () => {
       // We used to fire the event /before/ filtering, which meant that for
       // multi-codec content, the application might select something which will
       // later be removed during filtering.
-      // https://github.com/google/shaka-player/issues/1119
+      // https://github.com/shaka-project/shaka-player/issues/1119
       it('fires after tracks have been filtered', async () => {
         streamingListener.and.callFake(() => {
           const tracks = player.getVariantTracks();
@@ -621,7 +622,7 @@ describe('Player', () => {
       expect(logWarnSpy).not.toHaveBeenCalled();
     });
 
-    // Regression test for https://github.com/google/shaka-player/issues/784
+    // Regression test for https://github.com/shaka-project/shaka-player/issues/784
     it('does not throw when overwriting serverCertificate', () => {
       player.configure({
         drm: {
@@ -687,9 +688,9 @@ describe('Player', () => {
     });
 
     it('configures play and seek range for VOD', async () => {
-      player.configure({playRangeStart: 5, playRangeEnd: 10});
       const timeline = new shaka.media.PresentationTimeline(300, 0);
       timeline.setStatic(true);
+      timeline.setDuration(300);
       manifest = shaka.test.ManifestGenerator.generate((manifest) => {
         manifest.presentationTimeline = timeline;
         manifest.addVariant(0, (variant) => {
@@ -697,7 +698,46 @@ describe('Player', () => {
         });
       });
       goog.asserts.assert(manifest, 'manifest must be non-null');
+
+      player.configure({playRangeStart: 5, playRangeEnd: 10});
       await player.load(fakeManifestUri, 0, fakeMimeType);
+
+      const seekRange = player.seekRange();
+      expect(seekRange.start).toBe(5);
+      expect(seekRange.end).toBe(10);
+    });
+
+    // Test for https://github.com/shaka-project/shaka-player/issues/4026
+    it('configures play and seek range with notifySegments', async () => {
+      const timeline = new shaka.media.PresentationTimeline(300, 0);
+      timeline.setStatic(true);
+      // This duration is used by useSegmentTemplate below to decide how many
+      // references to generate.
+      timeline.setDuration(300);
+      manifest = shaka.test.ManifestGenerator.generate((manifest) => {
+        manifest.presentationTimeline = timeline;
+        manifest.addVariant(0, (variant) => {
+          variant.addVideo(1, (stream) => {
+            stream.useSegmentTemplate(
+                '$Number$.mp4', /* segmentDuration= */ 10);
+          });
+        });
+      });
+      goog.asserts.assert(manifest, 'manifest must be non-null');
+
+      // Explicitly notify the timeline of the segment references.
+      const videoStream = manifest.variants[0].video;
+      await videoStream.createSegmentIndex();
+      goog.asserts.assert(videoStream.segmentIndex,
+          'SegmentIndex must be non-null');
+      const references = Array.from(videoStream.segmentIndex);
+      goog.asserts.assert(references.length != 0,
+          'Must have references for this test!');
+      timeline.notifySegments(references);
+
+      player.configure({playRangeStart: 5, playRangeEnd: 10});
+      await player.load(fakeManifestUri, 0, fakeMimeType);
+
       const seekRange = player.seekRange();
       expect(seekRange.start).toBe(5);
       expect(seekRange.end).toBe(10);
@@ -798,7 +838,7 @@ describe('Player', () => {
       expect(newConfig.streaming.bufferBehind).toBe(77);
     });
 
-    // https://github.com/google/shaka-player/issues/1524
+    // https://github.com/shaka-project/shaka-player/issues/1524
     it('does not pollute other advanced DRM configs', () => {
       player.configure('drm.advanced.foo', {});
       player.configure('drm.advanced.bar', {});
@@ -1692,8 +1732,8 @@ describe('Player', () => {
       expect(getActiveTextTrack().id).toBe(spanishTextTrack.id);
     });
 
-    // Regression test for https://github.com/google/shaka-player/issues/2906
-    // and https://github.com/google/shaka-player/issues/2909.
+    // Regression test for https://github.com/shaka-project/shaka-player/issues/2906
+    // and https://github.com/shaka-project/shaka-player/issues/2909.
     it('selectAudioLanguage() can choose role-less tracks', async () => {
       // For this test, we use a different (and simpler) manifest.
       // Both audio tracks are English; one has a role, and one has no roles.
@@ -1753,7 +1793,7 @@ describe('Player', () => {
       expect(getActiveVariantTrack().audioRoles).toEqual([]);
     });
 
-    // https://github.com/google/shaka-player/issues/3262
+    // https://github.com/shaka-project/shaka-player/issues/3262
     it('selectAudioLanguage() doesn\'t change resolution', () => {
       player.configure('abr.enabled', false);
       abrManager.chooseIndex = 1;
@@ -1831,7 +1871,7 @@ describe('Player', () => {
       expect(getActiveTextTrack().language).toBe('en');
     });
 
-    // https://github.com/google/shaka-player/issues/2010
+    // https://github.com/shaka-project/shaka-player/issues/2010
     it('changing text lang changes active stream when not streaming', () => {
       player.setTextTrackVisibility(false);
 
@@ -2136,8 +2176,8 @@ describe('Player', () => {
     async function runTest(languages, preference, expectedIndex) {
       // A manifest we can use to test language selection.
       manifest = shaka.test.ManifestGenerator.generate((manifest) => {
-        const enumerate = (it) => shaka.util.Iterables.enumerate(it);
-        for (const {i, item: lang} of enumerate(languages)) {
+        for (let i = 0; i < languages.length; i++) {
+          const lang = languages[i];
           if (lang.charAt(0) == '*') {
             manifest.addVariant(i, (variant) => {
               variant.primary = true;
@@ -2572,7 +2612,7 @@ describe('Player', () => {
       expect(variants[0].id).toBe(2);
 
       // Now increase the restriction, AbrManager should still be updated.
-      // https://github.com/google/shaka-player/issues/1533
+      // https://github.com/shaka-project/shaka-player/issues/1533
       abrManager.setVariants.calls.reset();
       player.configure({restrictions: {maxBandwidth: Infinity}});
       expect(abrManager.setVariants).toHaveBeenCalledTimes(1);
@@ -3210,7 +3250,7 @@ describe('Player', () => {
     // Most of our Player unit tests never adapt.  This allowed some assertions
     // to creep in that went uncaught until they happened during manual testing.
     // Repro only happens with audio+video variants in which we only adapt one
-    // type.  This test covers https://github.com/google/shaka-player/issues/954
+    // type.  This test covers https://github.com/shaka-project/shaka-player/issues/954
 
     manifest = shaka.test.ManifestGenerator.generate((manifest) => {
       manifest.addVariant(0, (variant) => {
@@ -3292,7 +3332,7 @@ describe('Player', () => {
 
   describe('load', () => {
     it('tolerates bandwidth of NaN, undefined, or 0', async () => {
-      // Regression test for https://github.com/google/shaka-player/issues/938
+      // Regression test for https://github.com/shaka-project/shaka-player/issues/938
       manifest = shaka.test.ManifestGenerator.generate((manifest) => {
         manifest.addVariant(0, (variant) => {
           variant.bandwidth = /** @type {?} */(undefined);

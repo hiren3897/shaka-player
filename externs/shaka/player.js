@@ -746,9 +746,10 @@ shaka.extern.DashManifestConfiguration;
  * @typedef {{
  *   ignoreTextStreamFailures: boolean,
  *   ignoreImageStreamFailures: boolean,
- *   useFullSegmentsForStartTime: boolean,
  *   defaultAudioCodec: string,
- *   defaultVideoCodec: string
+ *   defaultVideoCodec: string,
+ *   ignoreManifestProgramDateTime: boolean,
+ *   mediaPlaylistFullMimeType: string
  * }}
  *
  * @property {boolean} ignoreTextStreamFailures
@@ -757,15 +758,26 @@ shaka.extern.DashManifestConfiguration;
  * @property {boolean} ignoreImageStreamFailures
  *   If <code>true</code>, ignore any errors in a image stream and filter out
  *   those streams.
- * @property {boolean} useFullSegmentsForStartTime
- *   If <code>true</code>, force HlsParser to use a full segment request for
- *   determining start time in case the server does not support partial requests
  * @property {string} defaultAudioCodec
  *   The default audio codec if it is not specified in the HLS playlist.
  *   <i>Defaults to <code>'mp4a.40.2'</code>.</i>
  * @property {string} defaultVideoCodec
  *   The default video codec if it is not specified in the HLS playlist.
  *   <i>Defaults to <code>'avc1.42E01E'</code>.</i>
+ * @property {boolean} ignoreManifestProgramDateTime
+ *   If <code>true</code>, the HLS parser will ignore the
+ *   <code>EXT-X-PROGRAM-DATE-TIME</code> tags in the manifest.
+ *   Meant for tags that are incorrect or malformed.
+ *   <i>Defaults to <code>false</code>.</i>
+ * @property {string} mediaPlaylistFullMimeType
+ *   A string containing a full mime type, including both the basic mime type
+ *   and also the codecs. Used when the HLS parser parses a media playlist
+ *   directly, required since all of the mime type and codecs information is
+ *   contained within the master playlist.
+ *   You can use the <code>shaka.util.MimeUtils.getFullType()</code> utility to
+ *   format this value.
+ *   <i>Defaults to
+ *   <code>'video/mp2t; codecs="avc1.42E01E, mp4a.40.2"'</code>.</i>
  * @exportDoc
  */
 shaka.extern.HlsManifestConfiguration;
@@ -780,6 +792,7 @@ shaka.extern.HlsManifestConfiguration;
  *   disableText: boolean,
  *   disableThumbnails: boolean,
  *   defaultPresentationDelay: number,
+ *   segmentRelativeVttTiming: boolean,
  *   dash: shaka.extern.DashManifestConfiguration,
  *   hls: shaka.extern.HlsManifestConfiguration
  * }}
@@ -811,6 +824,10 @@ shaka.extern.HlsManifestConfiguration;
  *   configured or set as 0.
  *   For HLS, the default value is 3 segments duration if not configured or
  *   set as 0.
+ * @property {boolean} segmentRelativeVttTiming
+ *   Option to calculate VTT text timings relative to the segment start
+ *   instead of relative to the period start (which is the default).
+ *   Defaults to <code>false</code>.
  * @property {shaka.extern.DashManifestConfiguration} dash
  *   Advanced parameters used by the DASH manifest parser.
  * @property {shaka.extern.HlsManifestConfiguration} hls

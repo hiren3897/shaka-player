@@ -209,12 +209,12 @@ shakaDemo.Config = class {
             'manifest.hls.ignoreTextStreamFailures')
         .addBoolInput_(MessageIds.IGNORE_HLS_IMAGE_FAILURES,
             'manifest.hls.ignoreImageStreamFailures')
-        .addBoolInput_(MessageIds.USE_FULL_SEGMENTS_FOR_START_TIME,
-            'manifest.hls.useFullSegmentsForStartTime')
         .addTextInput_(MessageIds.DEFAULT_AUDIO_CODEC,
             'manifest.hls.defaultAudioCodec')
         .addTextInput_(MessageIds.DEFAULT_VIDEO_CODEC,
             'manifest.hls.defaultVideoCodec')
+        .addBoolInput_(MessageIds.IGNORE_MANIFEST_PROGRAM_DATE_TIME,
+            'manifest.hls.ignoreManifestProgramDateTime')
         .addNumberInput_(MessageIds.AVAILABILITY_WINDOW_OVERRIDE,
             'manifest.availabilityWindowOverride',
             /* canBeDecimal= */ true,
@@ -237,7 +237,9 @@ shakaDemo.Config = class {
         .addBoolInput_(MessageIds.DISABLE_TEXT,
             'manifest.disableText')
         .addBoolInput_(MessageIds.DISABLE_THUMBNAILS,
-            'manifest.disableThumbnails');
+            'manifest.disableThumbnails')
+        .addBoolInput_(MessageIds.SEGMENT_RELATIVE_VTT_TIMING,
+            'manifest.segmentRelativeVttTiming');
 
     this.addRetrySection_('manifest', MessageIds.MANIFEST_RETRY_SECTION_HEADER);
   }

@@ -123,6 +123,9 @@ describe('CmcdManager', () => {
       retryParameters: /** @type {shaka.extern.RetryParameters} */({}),
       licenseRequestType: null,
       sessionId: null,
+      drmInfo: null,
+      initData: null,
+      initDataType: null,
       streamDataCallback: null,
     };
 

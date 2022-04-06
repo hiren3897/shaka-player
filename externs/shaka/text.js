@@ -426,6 +426,13 @@ shaka.extern.TextParser = class {
    * @exportDoc
    */
   parseMedia(data, timeContext) {}
+
+  /**
+   * Notifies the stream if the manifest is in sequence mode or not.
+   *
+   * @param {boolean} sequenceMode
+   */
+  setSequenceMode(sequenceMode) {}
 };
 
 
@@ -435,7 +442,8 @@ shaka.extern.TextParser = class {
  * @typedef {{
  *   periodStart: number,
  *   segmentStart: number,
- *   segmentEnd: number
+ *   segmentEnd: number,
+ *   vttOffset: number
  * }}
  *
  * @property {number} periodStart
@@ -444,6 +452,9 @@ shaka.extern.TextParser = class {
  *     The absolute start time of the segment in seconds.
  * @property {number} segmentEnd
  *     The absolute end time of the segment in seconds.
+ * @property {number} vttOffset
+ *     The start time relative to either segment or period start depending
+ *     on <code>segmentRelativeVttTiming</code> configuration.
  *
  * @exportDoc
  */

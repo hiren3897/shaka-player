@@ -18,7 +18,6 @@ goog.require('shaka.test.StreamingEngineUtil');
 goog.require('shaka.test.Util');
 goog.require('shaka.util.AbortableOperation');
 goog.require('shaka.util.Error');
-goog.require('shaka.util.Iterables');
 goog.require('shaka.util.ManifestParserUtils');
 goog.require('shaka.util.MimeUtils');
 goog.require('shaka.util.PlayerConfiguration');
@@ -284,7 +283,7 @@ describe('StreamingEngine', () => {
     };
 
     const segmentsInFirstPeriod = 12;
-    for (const i of shaka.util.Iterables.range(segmentsInFirstPeriod)) {
+    for (let i = 0; i < segmentsInFirstPeriod; i++) {
       segmentData[ContentType.AUDIO].segments.push(
           makeBuffer(segmentSizes[ContentType.AUDIO]));
       segmentData[ContentType.VIDEO].segments.push(
@@ -298,7 +297,7 @@ describe('StreamingEngine', () => {
     }
 
     const segmentsInSecondPeriod = 2;
-    for (const i of shaka.util.Iterables.range(segmentsInSecondPeriod)) {
+    for (let i = 0; i < segmentsInSecondPeriod; i++) {
       segmentData[ContentType.AUDIO].segments.push(
           makeBuffer(segmentSizes[ContentType.AUDIO]));
       segmentData[ContentType.VIDEO].segments.push(
@@ -520,7 +519,8 @@ describe('StreamingEngine', () => {
     expectedMseInit.set(ContentType.VIDEO, videoStream);
     expectedMseInit.set(ContentType.TEXT, textStream);
 
-    expect(mediaSourceEngine.init).toHaveBeenCalledWith(expectedMseInit, false);
+    expect(mediaSourceEngine.init).toHaveBeenCalledWith(expectedMseInit,
+        /** forceTransmuxTS= */ false, /** sequenceMode= */ false);
     expect(mediaSourceEngine.init).toHaveBeenCalledTimes(1);
 
     expect(mediaSourceEngine.setDuration).toHaveBeenCalledTimes(1);
@@ -651,7 +651,7 @@ describe('StreamingEngine', () => {
     // should be buffered.  Those segment numbers are 1-based, and this array
     // is 0-based, so we expect i >= 9 to be downloaded.
     const segments = mediaSourceEngine.segments;
-    for (const i of shaka.util.Iterables.range(14)) {
+    for (let i = 0; i < 14; i++) {
       expect(segments[ContentType.AUDIO][i]).withContext(i).toBe(i >= 9);
       expect(segments[ContentType.VIDEO][i]).withContext(i).toBe(i >= 9);
       expect(segments[ContentType.TEXT][i]).withContext(i).toBe(i >= 9);
@@ -757,7 +757,7 @@ describe('StreamingEngine', () => {
     expect(timeline.setDuration).toHaveBeenCalledWith(35);
   });
 
-  // https://github.com/google/shaka-player/issues/979
+  // https://github.com/shaka-project/shaka-player/issues/979
   it('does not expand the timeline duration', async () => {
     setupVod();
     mediaSourceEngine = new shaka.test.FakeMediaSourceEngine(segmentData);
@@ -783,7 +783,7 @@ describe('StreamingEngine', () => {
     expect(timeline.setDuration).not.toHaveBeenCalled();
   });
 
-  // https://github.com/google/shaka-player/issues/1967
+  // https://github.com/shaka-project/shaka-player/issues/1967
   it('does not change duration when 0', async () => {
     setupVod();
     mediaSourceEngine = new shaka.test.FakeMediaSourceEngine(segmentData);
@@ -825,10 +825,10 @@ describe('StreamingEngine', () => {
       asymmetricMatch: (val) => val > 40 && val <= 40.1,
     };
     expect(mediaSourceEngine.setStreamProperties)
-        .toHaveBeenCalledWith('video', 0, lt20, gt40);
+        .toHaveBeenCalledWith('video', 0, lt20, gt40, false);
   });
 
-  // Regression test for https://github.com/google/shaka-player/issues/3717
+  // Regression test for https://github.com/shaka-project/shaka-player/issues/3717
   it('applies fudge factors for the duration', async () => {
     setupVod();
 
@@ -931,7 +931,7 @@ describe('StreamingEngine', () => {
     expect(mediaSourceEngine.appendBuffer).toHaveBeenCalled();
   });
 
-  // https://github.com/google/shaka-player/issues/2957
+  // https://github.com/shaka-project/shaka-player/issues/2957
   it('plays with fewer text segments', async () => {
     setupVod();
 
@@ -1093,7 +1093,7 @@ describe('StreamingEngine', () => {
       expect(mediaSourceEngine.resetCaptionParser).not.toHaveBeenCalled();
     });
 
-    // See https://github.com/google/shaka-player/issues/2956
+    // See https://github.com/shaka-project/shaka-player/issues/2956
     it('works with fast variant switches during update', async () => {
       // Delay the appendBuffer call until later so we are waiting for this to
       // finish when we switch.
@@ -1661,7 +1661,7 @@ describe('StreamingEngine', () => {
       });
     });
 
-    // https://github.com/google/shaka-player/issues/2670
+    // https://github.com/shaka-project/shaka-player/issues/2670
     it('rapid unbuffered seeks', async () => {
       // This test simulates rapid dragging of the seek bar, as in #2670.
       // In that issue, we would buffer the wrong segments due to a race
@@ -1800,7 +1800,7 @@ describe('StreamingEngine', () => {
 
       // Since we performed an unbuffered seek into the second Period, the
       // first 12 segments should not be buffered.
-      for (const i of shaka.util.Iterables.range(14)) {
+      for (let i = 0; i < 14; i++) {
         expect(mediaSourceEngine.segments[ContentType.AUDIO][i]).toBe(i >= 12);
         expect(mediaSourceEngine.segments[ContentType.VIDEO][i]).toBe(i >= 12);
         expect(mediaSourceEngine.segments[ContentType.TEXT][i]).toBe(i >= 12);
@@ -2602,7 +2602,7 @@ describe('StreamingEngine', () => {
       // should be buffered.  Those segment numbers are 1-based, and this array
       // is 0-based, so we expect i >= 9 to be downloaded.
       const segments = mediaSourceEngine.segments;
-      for (const i of shaka.util.Iterables.range(14)) {
+      for (let i = 0; i < 14; i++) {
         expect(segments[ContentType.AUDIO][i]).withContext(i).toBe(i >= 9);
         expect(segments[ContentType.VIDEO][i]).withContext(i).toBe(i >= 9);
         expect(segments[ContentType.TEXT][i]).withContext(i).toBe(i >= 9);

@@ -123,6 +123,8 @@ shakaAssets.Feature = {
   MP4: shakaDemo.MessageIds.MP4,
   // Set if the asset has at least one MPEG-2 TS stream.
   MP2TS: shakaDemo.MessageIds.MP2TS,
+  // Set if the asset has at least one containerless stream (AAC, etc).
+  CONTAINERLESS: shakaDemo.MessageIds.CONTAINERLESS,
 
   // Set if the asset has at least one stream that is at least 720p.
   HIGH_DEFINITION: shakaDemo.MessageIds.HIGH_DEFINITION,
@@ -292,6 +294,15 @@ shakaAssets.testAssets = [
       .addFeature(shakaAssets.Feature.SUBTITLES)
       .addFeature(shakaAssets.Feature.SURROUND)
       .addFeature(shakaAssets.Feature.OFFLINE),
+  new ShakaDemoAssetInfo(
+      /* name= */ 'Angel One (HLS, MP4, video media playlist only)',
+      /* iconUri= */ 'https://storage.googleapis.com/shaka-asset-icons/angel_one.png',
+      /* manifestUri= */ 'https://storage.googleapis.com/shaka-demo-assets/angel-one-hls/playlist_v-0480p-1000k-libx264.mp4.m3u8',
+      /* source= */ shakaAssets.Source.SHAKA)
+      .addFeature(shakaAssets.Feature.HLS)
+      .addFeature(shakaAssets.Feature.MP4)
+      .addFeature(shakaAssets.Feature.OFFLINE)
+      .setMediaPlaylistFullMimeType('video/mp4; codecs="avc1.4d401f"'),
   new ShakaDemoAssetInfo(
       /* name= */ 'Angel One (HLS, MP4, multilingual, Widevine)',
       /* iconUri= */ 'https://storage.googleapis.com/shaka-asset-icons/angel_one.png',
@@ -1188,6 +1199,24 @@ shakaAssets.testAssets = [
       .addFeature(shakaAssets.Feature.HLS)
       .addFeature(shakaAssets.Feature.LIVE)
       .addFeature(shakaAssets.Feature.MP4),
+  new ShakaDemoAssetInfo(
+      /* name= */ 'Audio only HLS with raw AAC',
+      /* iconUri= */ 'https://storage.googleapis.com/shaka-asset-icons/apple_test_pattern.png',
+      /* manifestUri= */ 'https://storage.googleapis.com/shaka-demo-assets/raw-hls-audio-only/manifest.m3u8',
+      /* source= */ shakaAssets.Source.APPLE)
+      .addFeature(shakaAssets.Feature.HLS)
+      .addFeature(shakaAssets.Feature.CONTAINERLESS)
+      .addFeature(shakaAssets.Feature.AUDIO_ONLY),
+  new ShakaDemoAssetInfo(
+      /* name= */ 'Apple Advanced HLS Stream (TS) with raw AAC',
+      /* iconUri= */ 'https://storage.googleapis.com/shaka-asset-icons/apple_test_pattern.png',
+      /* manifestUri= */ 'https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_ts/master.m3u8',
+      /* source= */ shakaAssets.Source.APPLE)
+      .addFeature(shakaAssets.Feature.HLS)
+      .addFeature(shakaAssets.Feature.MP2TS)
+      .addFeature(shakaAssets.Feature.CONTAINERLESS)
+      .addFeature(shakaAssets.Feature.HIGH_DEFINITION)
+      .addFeature(shakaAssets.Feature.OFFLINE),
   // }}}
 
   // IRT assets {{{

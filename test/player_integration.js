@@ -17,8 +17,6 @@ goog.require('shaka.test.UiUtils');
 goog.require('shaka.test.Util');
 goog.require('shaka.test.Waiter');
 goog.require('shaka.util.EventManager');
-goog.require('shaka.util.Functional');
-goog.require('shaka.util.Iterables');
 
 describe('Player', () => {
   /** @type {!jasmine.Spy} */
@@ -299,7 +297,7 @@ describe('Player', () => {
       expect(variantTrack.language).toBe(textTrack.language);
     });
 
-    // Repro for https://github.com/google/shaka-player/issues/1879.
+    // Repro for https://github.com/shaka-project/shaka-player/issues/1879.
     it('appends cues when enabled initially', async () => {
       let cues = [];
       /** @const {!shaka.test.FakeTextDisplayer} */
@@ -356,7 +354,7 @@ describe('Player', () => {
       expect(cues.length).toBeGreaterThan(0);
     });
 
-    // https://github.com/google/shaka-player/issues/2553
+    // https://github.com/shaka-project/shaka-player/issues/2553
     it('does not change the selected track', async () => {
       player.configure('streaming.alwaysStreamText', false);
       await player.load('test:forced_subs_simulation_compiled');
@@ -433,6 +431,22 @@ describe('Player', () => {
       expect(video.playbackRate).toBe(1);
     });
 
+    it('in sequence mode', async () => {
+      const testSchemeMimeType = 'application/x-test-manifest';
+      player = new compiledShaka.Player(video);
+      await player.load('test:sintel_sequence_compiled', 0, testSchemeMimeType);
+      expect(player.getManifest().sequenceMode).toBe(true);
+
+      // Ensure the video plays.
+      video.play();
+      await waiter.waitUntilPlayheadReachesOrFailOnTimeout(video, 5, 10);
+
+      // Seek the video, and see if it can continue playing from that point.
+      video.currentTime = 20;
+      // Expect that we can then reach the end of the video.
+      await waiter.timeoutAfter(20).waitForEnd(video);
+    });
+
     // Regression test for #2326.
     //
     // 1. Construct an instance with a video element.
@@ -482,7 +496,7 @@ describe('Player', () => {
       expect(configuredTextDisplayer).toBe(textDisplayer);
     });
 
-    // Regression test for https://github.com/google/shaka-player/issues/1187
+    // Regression test for https://github.com/shaka-project/shaka-player/issues/1187
     it('does not throw on destroy', async () => {
       await player.load('test:sintel_compiled');
       video.play();
@@ -513,7 +527,7 @@ describe('Player', () => {
     // and the track selection was ignored.  Because this bug involved
     // interactions between Player and StreamingEngine, it is an integration
     // test and not a unit test.
-    // https://github.com/google/shaka-player/issues/1119
+    // https://github.com/shaka-project/shaka-player/issues/1119
     it('allows early selection of specific tracks', async () => {
       /** @type {!jasmine.Spy} */
       const streamingListener = jasmine.createSpy('listener');
@@ -548,7 +562,7 @@ describe('Player', () => {
     // switchingPeriods_ in Player.  Because this bug involved interactions
     // between Player and StreamingEngine, it is an integration test and not a
     // unit test.
-    // https://github.com/google/shaka-player/issues/1119
+    // https://github.com/shaka-project/shaka-player/issues/1119
     it('allows selection of tracks in subsequent loads', async () => {
       /** @type {!jasmine.Spy} */
       const streamingListener = jasmine.createSpy('listener');
@@ -785,7 +799,7 @@ describe('Player', () => {
 
       // Check that the final seek range is as expected.
       const seekRange = player.seekRange();
-      expect(seekRange.end).toBe(14);
+      expect(seekRange.end).toBeCloseTo(14);
     });
   });
 
@@ -915,8 +929,7 @@ describe('Player', () => {
     }
 
     async function waitUntilBuffered(amount) {
-      for (const _ of shaka.util.Iterables.range(25)) {
-        shaka.util.Functional.ignored(_);
+      for (let i = 0; i < 25; i++) {
         // We buffer from an internal segment, so this shouldn't take long to
         // buffer.
         await Util.delay(0.1);  // eslint-disable-line no-await-in-loop
